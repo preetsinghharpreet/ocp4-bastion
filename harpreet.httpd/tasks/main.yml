@@ -1,0 +1,56 @@
+---
+
+
+- name: Install needed packages
+  yum:
+    name:
+      - httpd
+      - vim
+      - bash-completion
+      - libselinux-python
+    state: present
+
+- name: Copy httpd conf file
+  copy:
+    src: httpd.conf
+    dest: /etc/httpd/conf/httpd.conf
+  notify:
+    - restart httpd
+
+- name: Create apache directories for installing
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - /var/www/html/install
+    - /var/www/html/ignition
+
+
+- name: Downloading OCP4 installer Bios
+  get_url:
+    url: "{{ ocp_bios}}"
+    dest: /var/www/html/install/bios.raw.gz
+    mode: 0555
+
+- name: Open up firewall ports
+  firewalld:
+    permanent: yes
+    immediate: yes
+    state: enabled
+    port: "{{ item }}"
+  with_items:
+      - 80/tcp
+      - 8080/tcp
+
+- name: Best effort SELinux repair - Apache
+  shell: "restorecon -vR /var/www/html || true"
+
+- name: Starting services
+  service:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  with_items:
+      - httpd
+

@@ -1,0 +1,130 @@
+---
+# tasks file for harpreet.ocp-pxe-dhcp
+
+
+- name: Install packages for DHCP/PXE install
+  yum:
+    name:
+      - dhcp
+      - syslinux
+      - tftp-server
+    state: present
+
+- name: Write out dhcp file
+  template:
+    src: dhcpd.conf.j2
+    dest: /etc/dhcp/dhcpd.conf
+  notify:
+    - restart dhcpd
+
+
+- name: Open up firewall ports
+  firewalld:
+    permanent: yes
+    immediate: yes
+    state: enabled
+    port: "{{ item }}"
+  with_items:
+    - 67/udp
+    - 69/udp
+
+- name: Create TFTP config
+  file:
+    path: /var/lib/tftpboot/pxelinux.cfg
+    state: directory
+    mode: 0755
+  notify:
+    - restart tftp
+
+- name: Create TFTP RHCOS dir
+  file:
+    path: /var/lib/tftpboot/rhcos
+    state: directory
+    mode: 0755
+
+
+- name: Copy over files needed for TFTP
+  shell: "cp -a /usr/share/syslinux/* /var/lib/tftpboot"
+
+- name: Downloading OCP4 installer initramfs
+  get_url:
+    url: "{{ ocp_initramfs }}"
+    dest: /var/lib/tftpboot/rhcos/initramfs.img
+    mode: 0555
+
+- name: Downloading OCP4 installer kernel
+  get_url:
+    url: "{{ ocp_install_kernel }}"
+    dest: /var/lib/tftpboot/rhcos/kernel
+    mode: 0555
+
+- name: Generate pxe config files
+  block:
+  - name: Set the default tftp file
+    template:
+      src: default.j2
+      dest: /var/lib/tftpboot/pxelinux.cfg/default
+      mode: 0555
+    notify:
+      - restart tftp
+
+- name: Set the bootstrap specific tftp file
+  template:
+    src: pxe-bootstrap.j2
+    dest: "/var/lib/tftpboot/pxelinux.cfg/01-{{ bootstrap.macaddr | regex_replace (':', '-')}}"
+    mode: 0555
+  notify:
+    - restart tftp
+
+- name: Set the master specific tftp files
+  template:
+     src: pxe-master.j2
+     dest: "/var/lib/tftpboot/pxelinux.cfg/01-{{ item.macaddr | regex_replace (':', '-')}}"
+     mode: 0555
+  with_items: "{{ masters }}"
+  notify:
+    - restart tftp
+
+- name: Set the worker specific tftp files
+  template:
+    src: pxe-worker.j2
+    dest: "/var/lib/tftpboot/pxelinux.cfg/01-{{ item.macaddr | regex_replace (':', '-')}}"
+    mode: 0555
+  with_items: "{{ workers }}"
+  notify:
+    - restart tftp
+
+#- name: Installing TFTP Systemd helper
+#  copy:
+#    src: start-tftp.sh
+#    dest: /usr/local/bin/start-tftp.sh
+#    mode: '0555'
+
+#- name: Installing TFTP Systemd unit file
+#  copy:
+#    src: helper-tftp.service
+#    dest: /etc/systemd/system/helper-tftp.service
+#    mode: '0655'
+
+#- name: Systemd daemon reload
+#  systemd:
+#    daemon_reload: yes
+
+- name: Starting DHCP/PXE services
+  service:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  with_items:
+      - dhcpd
+      - tftp
+ #     - helper-tftp
+
+- name: Unmasking Services
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    masked: no
+  with_items:
+      - tftp
+

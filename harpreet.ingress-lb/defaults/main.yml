@@ -1,0 +1,10 @@
+---
+# defaults file for harpreet.ingress-lb
+workers:
+  - name: "worker0"
+    ipaddr: "192.168.7.11"
+  - name: "worker1"
+    ipaddr: "192.168.7.12"
+  - name: "worker2"
+    ipaddr: "192.168.7.13"
+

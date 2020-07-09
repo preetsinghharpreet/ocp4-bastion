@@ -1,0 +1,12 @@
+---
+# handlers file for harpreet.ocp-pxe-dhcp
+- name: restart dhcpd
+  service:
+    name: dhcpd
+    state: restarted
+
+- name: restart tftp
+  service:
+    name: tftp
+    state: restarted
+

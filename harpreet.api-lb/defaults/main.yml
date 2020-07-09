@@ -1,0 +1,20 @@
+---
+# defaults file for harpreet.api-lb
+bootstrap:
+  name: "bootstrap"
+  ipaddr: "192.168.7.20"
+masters:
+  - name: "master0"
+    ipaddr: "192.168.7.21"
+  - name: "master1"
+    ipaddr: "192.168.7.22"
+  - name: "master2"
+    ipaddr: "192.168.7.23"
+workers:
+  - name: "worker0"
+    ipaddr: "192.168.7.11"
+  - name: "worker1"
+    ipaddr: "192.168.7.12"
+  - name: "worker2"
+    ipaddr: "192.168.7.13"
+

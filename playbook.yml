@@ -1,0 +1,28 @@
+---
+- hosts: all
+  ignore_errors: true
+  force_handlers: true
+  vars_file:
+    - vars.yml
+  tasks:
+   - name: dns
+     import_role: 
+	name: dns
+     when: inventory_hostname in groups['dns-grp']
+
+   - name: api-lb
+     import_role:
+        name: api-lb
+     when: inventory_hostname in groups['api-lb-grp']
+
+   - name: ingress-lb
+     import_role:
+        name: ingress-lb
+     when: inventory_hostname in groups['ingress-lb-grp']
+ 
+   - name: apache
+     import_role:
+       name: httpd
+     delegate_to: localhost
+     run_once: true
+       

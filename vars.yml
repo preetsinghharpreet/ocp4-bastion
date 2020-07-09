@@ -1,0 +1,24 @@
+---
+api_lb_ipaddr: 192.168.100.103
+ingress_lb_ipaddr: 192.168.100.104
+bastion:
+  name: "bastion"
+  ipaddr: "192.168.100.101"
+dns:
+  domain: "pd.com"
+  clusterid: "openshift4"
+  forwarder1: "8.8.8.8"
+  forwarder2: "8.8.4.4"
+bootstrap:
+  name: "bootstrap"
+  ipaddr: "192.168.100.105"
+masters:
+  - name: "master1"
+    ipaddr: "192.168.100.106"
+  - name: "master2"
+    ipaddr: "192.168.100.107"
+  - name: "master3"
+    ipaddr: "192.168.100.108"
+workers:
+  - name: "worker1"
+    ipaddr: "192.168.100.109"
